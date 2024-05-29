@@ -20,7 +20,6 @@ import com.banking.model.Transaction;
 import com.banking.service.AccountService;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
 
 @RestController
 @RequestMapping("/account")

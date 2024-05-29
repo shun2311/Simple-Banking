@@ -1,6 +1,7 @@
 package com.banking.service;
 
 import java.util.List;
+import java.util.Optional;
 import java.math.BigDecimal;
 
 import org.springframework.stereotype.Service;
@@ -26,6 +27,18 @@ public class AccountService {
     
     
     public Account createAccount(AccountActionDto accountCreateDto) {
+        // Must ensure user start with at least 0 in balance
+        if(accountCreateDto.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Cannot start with negative balance");
+        }
+
+        Optional<Account> accountOpt = accountRepository.findByUsername(accountCreateDto.getUsername());
+
+        // Cannot create account with same user name
+        if(accountOpt.isPresent()) {
+            throw new IllegalArgumentException("Account with the same username already exist");
+        }
+        
         Account account = new Account();
         account.setUsername(accountCreateDto.getUsername());
         account.setPassword(accountCreateDto.getPassword());
@@ -37,6 +50,9 @@ public class AccountService {
     public Transaction deposit(String username, String password, BigDecimal amount){
         Account account = accountRepository.findByUsernameAndPassword(username, password)
             .orElseThrow(() -> new EntityNotFoundException(INVALID_CREDENTIALS));
+        if(amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Cannot deposit negative amount");
+        }
         account.setAmount(account.getAmount().add(amount));
         accountRepository.save(account);
 
@@ -52,7 +68,7 @@ public class AccountService {
         Account account = accountRepository.findByUsernameAndPassword(username, password)
             .orElseThrow(() -> new EntityNotFoundException(INVALID_CREDENTIALS));
         if(amount.compareTo(account.getAmount()) > 0) {
-            throw new IllegalArgumentException("Cannot withdraw more than available balance!");
+            throw new IllegalArgumentException("Cannot withdraw more than available balance");
         }
         account.setAmount(account.getAmount().subtract(amount));
         accountRepository.save(account);
@@ -69,10 +85,10 @@ public class AccountService {
         Account initiator = accountRepository.findByUsernameAndPassword(username, password)
             .orElseThrow(() -> new EntityNotFoundException(INVALID_CREDENTIALS));
         if (amount.compareTo(initiator.getAmount()) > 0) {
-            throw new IllegalArgumentException("Cannot transfer more than available balance!");
+            throw new IllegalArgumentException("Cannot transfer more than available balance");
         }
         if (initiator.getAccountNo().equals(recipientAccountNo)) {
-            throw new IllegalArgumentException("Cannot transfer own account!");
+            throw new IllegalArgumentException("Cannot transfer own account");
         }
         initiator.setAmount(initiator.getAmount().subtract(amount));
         accountRepository.save(initiator);

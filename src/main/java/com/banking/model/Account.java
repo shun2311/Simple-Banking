@@ -10,7 +10,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
@@ -23,11 +22,11 @@ public class Account {
     private Long accountNo;
 
     @NotBlank
-    @Size(min = 4, max = 50)
+    @Size(max = 50)
     private String username;
 
     @NotBlank
-    @Size(min = 8, max = 128)
+    @Size(max = 128)
     private String password;
     
     @DecimalMin(value = "0")
