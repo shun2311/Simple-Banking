@@ -5,7 +5,7 @@ import java.math.BigDecimal;
 
 import org.springframework.stereotype.Service;
 
-import com.banking.dto.AccountCreateDto;
+import com.banking.dto.AccountActionDto;
 import com.banking.model.Account;
 import com.banking.model.Transaction;
 import com.banking.model.TransactionType;
@@ -25,9 +25,8 @@ public class AccountService {
     }
     
     
-    public Account createAccount(AccountCreateDto accountCreateDto) {
+    public Account createAccount(AccountActionDto accountCreateDto) {
         Account account = new Account();
-        account.setAccountNo(accountCreateDto.getAccountNo());
         account.setUsername(accountCreateDto.getUsername());
         account.setPassword(accountCreateDto.getPassword());
         account.setAmount(accountCreateDto.getAmount());
@@ -52,6 +51,9 @@ public class AccountService {
     public Transaction withdraw(String username, String password, BigDecimal amount){
         Account account = accountRepository.findByUsernameAndPassword(username, password)
             .orElseThrow(() -> new EntityNotFoundException(INVALID_CREDENTIALS));
+        if(amount.compareTo(account.getAmount()) > 0) {
+            throw new IllegalArgumentException("Cannot withdraw more than available balance!");
+        }
         account.setAmount(account.getAmount().subtract(amount));
         accountRepository.save(account);
 
@@ -66,12 +68,18 @@ public class AccountService {
     public Transaction transfer(String username, String password, BigDecimal amount, Long recipientAccountNo){
         Account initiator = accountRepository.findByUsernameAndPassword(username, password)
             .orElseThrow(() -> new EntityNotFoundException(INVALID_CREDENTIALS));
+        if (amount.compareTo(initiator.getAmount()) > 0) {
+            throw new IllegalArgumentException("Cannot transfer more than available balance!");
+        }
+        if (initiator.getAccountNo().equals(recipientAccountNo)) {
+            throw new IllegalArgumentException("Cannot transfer own account!");
+        }
         initiator.setAmount(initiator.getAmount().subtract(amount));
         accountRepository.save(initiator);
 
         Account recipient = accountRepository.findById(recipientAccountNo)
             .orElseThrow(() -> new EntityNotFoundException("Account with account number "+ recipientAccountNo + " does not exist"));
-        initiator.setAmount(recipient.getAmount().add(amount));
+        recipient.setAmount(recipient.getAmount().add(amount));
         accountRepository.save(recipient);
     
         Transaction transaction = new Transaction();

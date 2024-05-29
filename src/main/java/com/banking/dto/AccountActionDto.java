@@ -15,6 +15,4 @@ public class AccountActionDto {
 
     @NotNull
     private BigDecimal amount;
-
-    private Long recipientAccoutNo;
 }

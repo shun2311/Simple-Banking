@@ -2,6 +2,8 @@ package com.banking.model;
 
 import java.math.BigDecimal;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -38,10 +40,6 @@ public class Transaction {
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("accountNo")
     @JoinColumn(name = "initiator", referencedColumnName = "accountNo")
+    @JsonIgnore
     private Account initiatorAccount;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @MapsId("accountNo")
-    @JoinColumn(name = "recipient", referencedColumnName = "accountNo")
-    private Account recipientAccount;
 }

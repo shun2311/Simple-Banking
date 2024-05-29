@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.banking.dto.AccountActionDto;
-import com.banking.dto.AccountCreateDto;
 import com.banking.model.Account;
 import com.banking.model.Transaction;
 import com.banking.service.AccountService;
@@ -34,8 +33,8 @@ public class AccountController {
 
     @PostMapping("")
     public ResponseEntity<Account> createAccount(
-            @RequestBody AccountCreateDto accountCreateDto) {
-        return new ResponseEntity<>(accountService.createAccount(accountCreateDto), HttpStatus.CREATED);
+            @RequestBody AccountActionDto accountActionDto) {
+        return new ResponseEntity<>(accountService.createAccount(accountActionDto), HttpStatus.CREATED);
     }  
 
     @PutMapping(value = "/deposit")
@@ -54,12 +53,13 @@ public class AccountController {
                 HttpStatus.OK);
     }
 
-    @PutMapping(value = "/transfer")
+    @PutMapping(value = "/transfer/{recipientAccount}")
     public ResponseEntity<Transaction> transfer(
+        @PathVariable @Valid Long recipientAccount,
         @RequestBody AccountActionDto accountActionDto) {
             return new ResponseEntity<>(
                 accountService.transfer(accountActionDto.getUsername(), 
-                    accountActionDto.getPassword(), accountActionDto.getAmount(), accountActionDto.getRecipientAccoutNo()), 
+                    accountActionDto.getPassword(), accountActionDto.getAmount(), recipientAccount), 
                 HttpStatus.OK);
     }
 
@@ -72,7 +72,6 @@ public class AccountController {
 
     @GetMapping(value = "/transactions")
     public ResponseEntity<List<Transaction>> getTransactions(
-
         @RequestParam String username,
         @RequestParam String password) {
             return new ResponseEntity<>(accountService.getTransactions(username, password), HttpStatus.OK);
