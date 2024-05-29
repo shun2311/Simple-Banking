@@ -96,7 +96,7 @@ public class AccountService {
     }
 
     // Transfer minimum: 1
-    // Withdraw maximum: Available Balance
+    // Transfer maximum: Available Balance
     public Transaction transfer(String username, String password, BigDecimal amount, Long recipientAccountNo){
         if(amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Cannot transfer negative or zero amount");
