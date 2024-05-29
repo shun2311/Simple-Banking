@@ -32,6 +32,11 @@ public class AccountService {
             throw new IllegalArgumentException("Cannot start with negative balance");
         }
 
+        // Minimum 6 characters 
+        if(accountCreateDto.getPassword().length() < 6) {
+            throw new IllegalArgumentException("Password must be greater than 6 characters");
+        }
+
         Optional<Account> accountOpt = accountRepository.findByUsername(accountCreateDto.getUsername());
 
         // Cannot create account with same user name
@@ -41,18 +46,21 @@ public class AccountService {
         
         Account account = new Account();
         account.setUsername(accountCreateDto.getUsername());
+        // Should be using keycloak instead
         account.setPassword(accountCreateDto.getPassword());
         account.setAmount(accountCreateDto.getAmount());
         accountRepository.save(account);
         return account;
     }
 
+    // Deposit minimum: 1
     public Transaction deposit(String username, String password, BigDecimal amount){
-        Account account = accountRepository.findByUsernameAndPassword(username, password)
-            .orElseThrow(() -> new EntityNotFoundException(INVALID_CREDENTIALS));
         if(amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Cannot deposit negative amount");
+            throw new IllegalArgumentException("Cannot deposit negative or zero amount");
         }
+
+        Account account = accountRepository.findByUsernameAndPassword(username, password)
+            .orElseThrow(() -> new EntityNotFoundException(INVALID_CREDENTIALS)); 
         account.setAmount(account.getAmount().add(amount));
         accountRepository.save(account);
 
@@ -64,12 +72,18 @@ public class AccountService {
         return transaction;
     }
 
+    // Withdraw minimum: 1
+    // Withdraw maximum: Available Balance
     public Transaction withdraw(String username, String password, BigDecimal amount){
         Account account = accountRepository.findByUsernameAndPassword(username, password)
             .orElseThrow(() -> new EntityNotFoundException(INVALID_CREDENTIALS));
+        if(amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Cannot withdraw negative or zero amount");
+        }
         if(amount.compareTo(account.getAmount()) > 0) {
             throw new IllegalArgumentException("Cannot withdraw more than available balance");
         }
+        
         account.setAmount(account.getAmount().subtract(amount));
         accountRepository.save(account);
 
@@ -81,20 +95,29 @@ public class AccountService {
         return transaction;
     }
 
+    // Transfer minimum: 1
+    // Withdraw maximum: Available Balance
     public Transaction transfer(String username, String password, BigDecimal amount, Long recipientAccountNo){
+        if(amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Cannot transfer negative or zero amount");
+        }
+       
         Account initiator = accountRepository.findByUsernameAndPassword(username, password)
             .orElseThrow(() -> new EntityNotFoundException(INVALID_CREDENTIALS));
+
         if (amount.compareTo(initiator.getAmount()) > 0) {
             throw new IllegalArgumentException("Cannot transfer more than available balance");
         }
         if (initiator.getAccountNo().equals(recipientAccountNo)) {
-            throw new IllegalArgumentException("Cannot transfer own account");
+            throw new IllegalArgumentException("Cannot transfer to own account");
         }
+        Account recipient = accountRepository.findById(recipientAccountNo)
+            .orElseThrow(() -> new EntityNotFoundException("Account with account number "+ recipientAccountNo + " does not exist"));
+
+        
         initiator.setAmount(initiator.getAmount().subtract(amount));
         accountRepository.save(initiator);
 
-        Account recipient = accountRepository.findById(recipientAccountNo)
-            .orElseThrow(() -> new EntityNotFoundException("Account with account number "+ recipientAccountNo + " does not exist"));
         recipient.setAmount(recipient.getAmount().add(amount));
         accountRepository.save(recipient);
     
