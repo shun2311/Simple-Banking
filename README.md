@@ -1,6 +1,6 @@
 # Simple-Banking
 
-When creating an account, make sure the password is greater than 6 characters. The database already contains the accounts,
+When creating an account, make sure the password is greater than 6 characters. The database already contains two accounts,
 account 1 already contains several transactions:
 
 ### Account 1
