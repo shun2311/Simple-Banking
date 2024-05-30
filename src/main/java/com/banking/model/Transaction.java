@@ -35,6 +35,7 @@ public class Transaction {
     private Long recipient;
 
     @Enumerated(EnumType.STRING)
+    @NotNull
     private TransactionType type;
     
     @ManyToOne(fetch = FetchType.LAZY)
