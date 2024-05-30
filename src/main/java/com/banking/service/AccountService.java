@@ -28,7 +28,7 @@ public class AccountService {
     
     public Account createAccount(AccountActionDto accountCreateDto) {
         // Must ensure user start with at least 0 in balance
-        if(accountCreateDto.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
+        if(accountCreateDto.getAmount().compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException("Cannot start with negative balance");
         }
 
